@@ -8,6 +8,7 @@ import type { GemmaMode } from "@/lib/types";
 
 const links = [
   { href: "/", label: "Home" },
+  { href: "/onboarding", label: "Onboarding" },
   { href: "/schedule", label: "Schedule" },
   { href: "/upload", label: "Upload" },
   { href: "/prep", label: "Meeting Prep" },
@@ -36,7 +37,7 @@ export function AppNav() {
             href="/"
             className="text-lg font-semibold tracking-tight text-[var(--ink)]"
           >
-            Thread
+            Nightingale
           </Link>
           <div
             className="flex items-center gap-1 rounded-md border border-[var(--border)] p-0.5 text-xs sm:hidden"

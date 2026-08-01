@@ -39,8 +39,11 @@ function withNextAppt(
   overrides?: Partial<Omit<Appointment, "id">>,
 ): AppState {
   if (!state.profile) return state;
+  // Demo profiles set next_appointment; appointmentFromProfile may return null.
+  const base = appointmentFromProfile(state.profile, apptId);
+  if (!base) return state;
   const appt: Appointment = {
-    ...appointmentFromProfile(state.profile, apptId),
+    ...base,
     ...overrides,
     id: apptId,
   };

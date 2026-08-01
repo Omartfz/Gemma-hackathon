@@ -14,7 +14,7 @@ const sans = Source_Sans_3({
 });
 
 export const metadata: Metadata = {
-  title: "Thread — Pregnancy Care Companion",
+  title: "Nightingale — Pregnancy Care Companion",
   description:
     "Decision-support companion for pregnancy documentation readiness. Synthetic data only.",
 };

@@ -5,8 +5,8 @@ export type PatientProfile = {
   gestational_week: number;
   due_date?: string;
   provider: { name: string; role: string };
-  next_appointment: { date: string; title: string };
-  onboarding_source: "form" | "ehr_roadmap";
+  next_appointment?: { date: string; title: string };
+  onboarding_source: "form" | "document" | "ehr_roadmap";
 };
 
 export type DocFlag = {

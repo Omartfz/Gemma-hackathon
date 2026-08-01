@@ -8,6 +8,19 @@
   --surface: #faf8f4;
   --border: #d5d0c6;
   --accent-soft: #e2ebe4;
+
+  /* Trimester-zone accents — validated categorical set (dataviz skill):
+     lightness/chroma in-band, adjacent CVD + normal-vision floors clear;
+     zone name is always shown as text alongside color, so identity never
+     rests on hue alone. */
+  --zone-first: #1f8a4c;
+  --zone-first-soft: #d7e6d9;
+  --zone-second: #c98a12;
+  --zone-second-soft: #f2e6d0;
+  --zone-third: #b83d6b;
+  --zone-third-soft: #efdade;
+  --zone-postpartum: #6a4f8f;
+  --zone-postpartum-soft: #e3dde4;
 }
 
 @theme inline {
@@ -23,4 +36,31 @@ body {
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), "Source Sans 3", system-ui, sans-serif;
+}
+
+@keyframes zone-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.zone-pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: zone-pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zone-pulse::before {
+    animation: none;
+    display: none;
+  }
 }
