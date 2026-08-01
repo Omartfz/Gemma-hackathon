@@ -24,7 +24,7 @@ export default function DemoProfilesPage() {
 
   function reset() {
     resetDemoState();
-    setLoadedId("empty");
+    setLoadedId("reset");
     setError(null);
   }
 
@@ -37,11 +37,20 @@ export default function DemoProfilesPage() {
         Patient profiles
       </h1>
       <p className="mt-3 max-w-2xl text-[var(--muted)]">
-        Load a synthetic AppState into localStorage to walk through Thread
-        features. Synthetic / decision-support data only.
+        Three female patient snapshots for early, mid, and visit-ready demos.
+        Load one into localStorage, then walk through Thread. Synthetic /
+        decision-support data only.
       </p>
 
-      {loadedId ? (
+      {loadedId === "reset" ? (
+        <p className="mt-4 text-sm text-[var(--ink)]">
+          Store reset to empty. Open{" "}
+          <Link href="/" className="underline">
+            Home
+          </Link>{" "}
+          for the pre-onboarding state.
+        </p>
+      ) : loadedId ? (
         <p className="mt-4 text-sm text-[var(--ink)]">
           Loaded <code className="text-sm">{loadedId}</code>. Open{" "}
           <Link href="/prep" className="underline">
@@ -91,7 +100,7 @@ export default function DemoProfilesPage() {
         onClick={reset}
         className="mt-6 rounded-md border border-[var(--border)] px-4 py-2 text-sm text-[var(--ink)]"
       >
-        Reset store
+        Reset store (clear profile)
       </button>
     </main>
   );

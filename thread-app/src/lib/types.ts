@@ -36,6 +36,8 @@ export type LibraryDoc = {
   linked_entry_id: string | null;
   raw_text_extracted: string;
   checklist_item_id?: string;
+  /** Upcoming visit this document was uploaded for */
+  appointment_id?: string;
 };
 
 export type RequiredDocItem = {
@@ -46,8 +48,18 @@ export type RequiredDocItem = {
   doc_type?: TimelineEntry["type"];
 };
 
+export type Appointment = {
+  id: string;
+  date: string;
+  title: string;
+  provider: { name: string; role: string };
+  /** Checklist item ids required for this visit */
+  required_doc_ids: string[];
+};
+
 export type AppState = {
   profile: PatientProfile | null;
+  appointments: Appointment[];
   entries: TimelineEntry[];
   documents: LibraryDoc[];
   gemmaMode: GemmaMode;

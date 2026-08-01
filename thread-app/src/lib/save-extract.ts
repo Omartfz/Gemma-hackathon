@@ -19,20 +19,29 @@ function pickDate(result: ExtractResult): string {
   return todayISO();
 }
 
-/** Persist extract result as LibraryDoc + TimelineEntry in shared store. */
+export type SaveExtractInput = {
+  filename: string;
+  result: ExtractResult;
+  appointmentId: string;
+  checklistItemId: string;
+};
+
+/** Persist extract linked to an appointment + required doc title. */
 export function saveExtractToStore(
-  filename: string,
-  result: ExtractResult,
+  input: SaveExtractInput,
 ): { document: LibraryDoc; entry: TimelineEntry } {
+  const { filename, result, appointmentId, checklistItemId } = input;
   const doc_id = newDocId();
   const entry_id = newEntryId();
   const uploaded_at = new Date().toISOString();
 
   const state = updateState((prev) => {
-    const provider = prev.profile?.provider ?? {
-      name: "Unknown",
-      role: "Provider",
-    };
+    const appt = prev.appointments.find((a) => a.id === appointmentId);
+    const provider = appt?.provider ??
+      prev.profile?.provider ?? {
+        name: "Unknown",
+        role: "Provider",
+      };
 
     const document: LibraryDoc = {
       doc_id,
@@ -40,7 +49,8 @@ export function saveExtractToStore(
       uploaded_at,
       linked_entry_id: entry_id,
       raw_text_extracted: result.raw_text_extracted,
-      checklist_item_id: result.checklist_item_id,
+      checklist_item_id: checklistItemId,
+      appointment_id: appointmentId,
     };
 
     const entry: TimelineEntry = {
@@ -57,10 +67,30 @@ export function saveExtractToStore(
       source_doc: { doc_id, filename, uploaded_at },
     };
 
+    // Replace prior doc for same appointment + checklist item
+    const documents = prev.documents.filter(
+      (d) =>
+        !(
+          d.appointment_id === appointmentId &&
+          d.checklist_item_id === checklistItemId
+        ),
+    );
+    const removedIds = new Set(
+      prev.documents
+        .filter(
+          (d) =>
+            d.appointment_id === appointmentId &&
+            d.checklist_item_id === checklistItemId,
+        )
+        .map((d) => d.linked_entry_id)
+        .filter(Boolean),
+    );
+    const entries = prev.entries.filter((e) => !removedIds.has(e.id));
+
     return {
       ...prev,
-      documents: [...prev.documents, document],
-      entries: [...prev.entries, entry],
+      documents: [...documents, document],
+      entries: [...entries, entry],
     };
   });
 

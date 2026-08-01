@@ -1,62 +1,55 @@
 # Omar — Execution Phases
 
 Work lives in [`thread-app/`](thread-app/). Team contract: [`PLAN.md`](PLAN.md).  
-Agent guidance: [`.agents/skills/gemma-dev`](.agents/skills/gemma-dev) (from [google-gemma/gemma-skills](https://github.com/google-gemma/gemma-skills)).
+Agent guidance: [`.agents/skills/gemma-dev`](.agents/skills/gemma-dev).
 
-**Owns:** Upload Docs, Meeting Prep, Document Library, extract client, synthetic pack, readiness logic.  
+**Owns:** Upload Docs, Meeting Prep, Document Library, extract client, readiness/agent tools.  
 **Daniel owns:** Onboarding form + Home (reads shared store).
 
 ---
 
-## Phase 1 — Shared foundation (done)
+## Phase 1–2 (done)
 
-- Types / store / Zone 1 checklist / stub routes + nav
+Shared store/types + `POST /api/extract` (OpenAI temp / Ollama / fixtures).
 
-## Phase 2 — Extract API (done)
+## Phase 3 — Prep by appointment + targeted Upload (done)
 
-`POST /api/extract` — OpenAI (temp cloud) / Ollama local / filename fixtures.
-
-## Phase 3 — Required docs list + thin Upload (done)
-
-**Not agentic yet** — static checklist UI + one-shot extract→save.
+**Still not a full agent loop** — statuses are computed from store data.
 
 ### Meeting Prep `/prep`
-- Lists Zone 1 docs from `ZONE1_REQUIRED_DOCS`
-- Each item: **what** + **why** + **Have / Missing**
-- Have = store `documents[]` with matching `checklist_item_id`
+- Lists **upcoming appointments**
+- Under each: required docs with **why** + status:
+  - `missing` — no doc for that appointment + checklist id
+  - `uploaded` — saved, no open flags
+  - `need_check` — saved, unresolved extract flags
 
-### Upload `/upload` (minimal)
-- File pick → Extract → show JSON → Save to store
-- CareOS PDF **filenames** drive fixtures (no PDF parsing)
+### Upload `/upload`
+1. Select **appointment**
+2. Select **document title** from that appointment’s required list
+3. File → Extract → Save (writes `appointment_id` + `checklist_item_id`)
 
-**Code:**
-- `thread-app/src/lib/checklist-status.ts`
-- `thread-app/src/lib/save-extract.ts`
-- `thread-app/src/lib/ids.ts`
-- `thread-app/src/app/prep/page.tsx`
-- `thread-app/src/app/upload/page.tsx`
+### Data
+- `Appointment` on `AppState.appointments`
+- `LibraryDoc.appointment_id`
+- Seed: `ensureAppointments()` from `profile.next_appointment` + Zone 1 required ids
+- Helpers: `getAppointmentPrepViews`, `saveExtractToStore({ appointmentId, checklistItemId, ... })`
 
-## Phase 4 — Document Library
+## Next — Agentic readiness
 
-- List + detail from store (thin)
+Tools over the same appointment/doc model: `get_required_docs`, `check_document`, `compute_readiness`.
 
-## Phase 5 — Agentic readiness (next focus)
+## Phase 4 / 6
 
-- Tools: `get_required_docs`, `check_document`, `update_task_list`, `compute_readiness`
-- Orchestrator loop (OpenAI tools now → Gemma later)
-- Write `readinessScore` for Home CTA
-
-## Phase 6 — Polish
-
-- Mode toggle, disclaimer, synthetic pack in repo
+Library UI polish; mode toggle; synthetic PDFs in repo.
 
 ---
 
 ## Import paths for Daniel
 
 ```ts
-import type { AppState, PatientProfile, TimelineEntry } from "@/lib/types";
-import { loadState, saveState, updateState, defaultState } from "@/lib/store";
-import { ZONE1_REQUIRED_DOCS } from "@/lib/checklist-zone1";
-import { getRequiredDocStatuses } from "@/lib/checklist-status";
+import type { Appointment, AppState, PatientProfile } from "@/lib/types";
+import { loadState, updateState, ensureAppointments } from "@/lib/store";
+import { getAppointmentPrepViews } from "@/lib/checklist-status";
 ```
+
+When writing `profile` from onboarding, either also set `appointments` or rely on `ensureAppointments` on next `loadState()`.
