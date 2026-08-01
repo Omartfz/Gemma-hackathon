@@ -190,8 +190,8 @@ If the team prefers Vite instead, agree in chat and update this file before scaf
 - [x] Omar: Prep by appointment + targeted Upload  
 - [x] Omar: Schedule + book + Tavily research  
 - [x] Omar: Agentic readiness loop  
-- [ ] Omar: Document Library polish  
-- [ ] Mode toggle, disclaimers, sync README with this plan  
+- [x] Omar: Document Library polish  
+- [x] Mode toggle, disclaimers, sync README with this plan  
 
 ---
 

@@ -37,9 +37,12 @@ export default function DemoProfilesPage() {
         Patient profiles
       </h1>
       <p className="mt-3 max-w-2xl text-[var(--muted)]">
-        Three female patient snapshots — first prenatal (week 8), 12-week
-        checkup, and NT ultrasound visit-ready. Load one into localStorage,
-        then open Meeting Prep. Synthetic / decision-support data only.
+        Three female patient snapshots spanning the journey — first prenatal
+        intake (week 8), anatomy scan (week 20, partial docs), and a 6-week
+        postpartum checkup (visit-ready). Load one into localStorage, then open
+        Meeting Prep. Synthetic / decision-support data only. Sample upload
+        PDFs live under{" "}
+        <code className="text-sm">/samples/</code> (intake, labs, ultrasound).
       </p>
 
       {loadedId === "reset" ? (

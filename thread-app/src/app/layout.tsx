@@ -29,6 +29,9 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col antialiased">
         <AppNav />
         <div className="flex flex-1 flex-col">{children}</div>
+        <footer className="border-t border-[var(--border)] px-4 py-3 text-center text-xs text-[var(--muted)]">
+          Decision-support only · synthetic / demo data · not medical advice
+        </footer>
       </body>
     </html>
   );

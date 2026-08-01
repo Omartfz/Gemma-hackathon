@@ -1,151 +1,82 @@
-# Pregnancy Continuity-of-Care App
+# Thread — Pregnancy Care Companion
 
-> **Team agreement:** see [PLAN.md](PLAN.md) for the locked hackathon plan (team split, hybrid Gemma, onboarding form, no EHR in demo). When this README and PLAN disagree, **PLAN.md wins** until README is updated.
+> **Team agreement:** [PLAN.md](PLAN.md) is the source of truth. This README matches that plan.
+
+**Event:** Build with Gemma NYC — On-Device AI for Healthcare  
+**Track:** Track 2 (Agentic Care Copilots), hybrid local/cloud Gemma  
+**Constraint:** Decision-support only · Synthetic/public data only · Never diagnosis
+
+App code lives in [`thread-app/`](thread-app/). Omar phases: [`OMAR.md`](OMAR.md).
 
 ## Problem
-Pregnant patients see multiple providers over 9+ months — OB, midwife, specialists, labs.
-Info gets lost between visits. Patients forget symptoms, don't know what's normal, walk into
-appointments unprepared. This data is deeply private.
+
+Pregnant patients see multiple providers over 9+ months. Info gets lost between visits; patients walk into appointments unprepared. This data is deeply private.
 
 ## Solution
-Thread is an on-device web app that turns scattered visit documents and patient notes into
-one continuous, private timeline. Gemma 4 runs locally to extract info, catch gaps, and prep
-patients before every appointment — no health data ever leaves the device.
 
-## Key Points
-- Patient uploads visit documents (PDFs, photos of forms) over the course of pregnancy
-- Gemma (on-device) parses each doc into structured fields; first doc also generates onboarding (profile + checklist + timeline scaffold)
-- Flagged empty/off fields are reviewed and corrected inline by the patient
-- All documents build one visual timeline, organized into trimester zones and by provider visit
-- Meeting Prep surfaces gaps, required docs, and drafted questions — tied to current trimester stage
-- 100% offline — zero network calls, provable live in demo
-- Synthetic/public data only — decision-support only, never diagnosis
+Thread turns visit documents into a shared local timeline and paperwork checklist. Gemma extracts fields, flags incomplete docs, and powers meeting readiness. Demo path uses an **onboarding form** (EHR/OnTross is roadmap only). Extract can run **local (Ollama)** or **cloud (API)** via a nav toggle.
 
-## Care Timeline Structure
-Home page timeline is organized into 4 zones, each a section on the visual timeline
-with its own nested documents:
+## Key points
 
-1. **First Trimester (W1–W12):** Onboarding & Baseline
-2. **Second Trimester (W13–W27):** Tracking & Screening
-3. **Third Trimester (W28–W40):** Birth Plan & Admin Auth
-4. **Postpartum Care (W41+ / 0–12 weeks post-birth):** Recovery & Newborn
-
-Meeting Prep's required-docs checklist is tied to the current trimester/stage —
-checklist contents change as the patient progresses through zones.
-
-Demo data currently being generated for **Zone 1 (First Trimester)** first.
+- Upload visit documents (PDFs / photos) linked to an appointment + required doc title
+- Extract → structured fields + flags (OpenAI temp / Ollama / filename fixtures)
+- **Schedule → Book** researches required docs (Tavily or fixtures) then saves the appointment
+- **Meeting Prep** shows missing / uploaded / need_check; **Run readiness check** runs the agent tool loop
+- **Document Library** lists saved docs with expand detail
+- Synthetic data only — decision-support, never diagnosis
 
 ## Pages
 
-### 1. Home
-- Visual timeline (dots/line style), organized by provider visit
-- Next appointment card
-- "Prep for Next Appointment" button
-- Nav to other pages
-- Empty state handled here (before any docs uploaded)
+| Route | Owner | Role |
+| --- | --- | --- |
+| `/` Home | Daniel | Trimester timeline, Prep CTA, empty state |
+| Onboarding form | Daniel | Writes patient profile (+ next appointment) |
+| `/schedule`, `/schedule/book` | Omar | List + book with Tavily/fixture doc research |
+| `/upload` | Omar | Targeted extract + save |
+| `/prep` | Omar | Per-appointment checklist + readiness agent |
+| `/library` | Omar | Document list + detail |
+| `/demo` | Shared | Seed profiles |
 
-### 2. Upload Docs
-- Upload PDF or photo of document
-- Gemma extracts structured fields
-- Flags empty/off-looking fields
-- User reviews and edits flagged fields inline before saving
-- First upload also triggers onboarding: sets patient name, timeline anchor, provider info
+## Runtime
 
-### 3. Meeting Prep
-- Required documents checklist for next visit
-- Gaps/flags detected by Gemma (e.g. "BP monitoring mentioned, no readings logged since")
-- Drafted questions to ask provider, generated from timeline history
+| Mode | How |
+| --- | --- |
+| Cloud | Gemma via `GOOGLE_API_KEY` (`gemma-4-26b-a4b-it`) → OpenAI fallback → fixtures |
+| Local | Ollama (`OLLAMA_BASE_URL`, `OLLAMA_MODEL`) → fixture fallback |
+| Research | `TAVILY_API_KEY` + Gemma structure → fixture fallback |
 
-### 4. Document Library
-- List of all uploaded/generated documents
-- Click to view/reopen (modal or expand, not a separate page)
+Copy [`thread-app/.env.example`](thread-app/.env.example) → `.env.local`.
 
-## Data Model (lock this first, before splitting work)
+Sample CareOS PDFs: [`thread-app/public/samples/`](thread-app/public/samples/).
 
-Sample timeline entry — adjust fields once PM confirms actual sample PDFs:
+## Data model
 
-```json
-{
-  "id": "entry_0001",
-  "date": "2026-02-14",
-  "trimester": "first",
-  "type": "visit",
-  "provider": {
-    "name": "Dr. Sarah Chen",
-    "role": "OB/GYN"
-  },
-  "category": "physical",
-  "title": "12-Week Prenatal Checkup",
-  "summary": "Routine checkup, blood pressure normal, weight on track.",
-  "fields": {
-    "blood_pressure": "118/76",
-    "weight_lbs": 142,
-    "fetal_heart_rate_bpm": 150,
-    "next_appointment_recommended": "2026-03-14"
-  },
-  "flags": [
-    {
-      "field": "fetal_heart_rate_bpm",
-      "issue": "missing_in_source",
-      "resolved": false
-    }
-  ],
-  "source_doc": {
-    "doc_id": "doc_0001",
-    "filename": "visit_summary_w12.pdf",
-    "uploaded_at": "2026-02-14T10:30:00Z"
-  }
-}
+Outer shapes: patient profile, appointments (with `required_doc_ids` / `doc_reasons`), timeline entries, library docs. Persist in `localStorage` (`thread-app-state`). See PLAN.md and `thread-app/src/lib/types.ts`.
+
+## Team split
+
+| Person | Owns |
+| --- | --- |
+| **Daniel** | Onboarding form + Home timeline |
+| **Omar** | Schedule, Upload, Prep, Library, extract, Tavily, readiness tools |
+
+## Demo script (~2 min)
+
+1. Load demo profile (or onboarding form)
+2. Schedule → Book → research docs → confirm
+3. Meeting Prep → Run readiness check
+4. Upload sample PDF for a missing doc → extract → save
+5. Library + Prep score update; disclaimer: decision-support / synthetic only
+
+## Out of scope for MVP
+
+- Accounts / login, live EHR, real calendar sync, voice input
+- Full multi-turn chat agent (readiness uses a fixed tool loop)
+
+## Dev
+
+```bash
+cd thread-app
+npm install
+npm run dev
 ```
-
-**Field notes:**
-- `id` — unique per entry, used for linking from Document Library
-- `trimester` — auto-set from date vs. due date, or inferred from doc content
-- `type` — visit / lab / referral / note (extend as needed per doc type)
-- `fields` — flexible object, shape changes based on doc type (a lab result has different fields than a visit summary) — keep this loosely typed so it can flex per PDF
-- `flags` — array so multiple issues per entry are possible; each resolved via inline edit in Upload Docs
-- `source_doc` — links back to Document Library entry
-
-**Document Library entry (separate object, referenced by source_doc):**
-```json
-{
-  "doc_id": "doc_0001",
-  "filename": "visit_summary_w12.pdf",
-  "uploaded_at": "2026-02-14T10:30:00Z",
-  "linked_entry_id": "entry_0001",
-  "raw_text_extracted": "..."
-}
-```
-
-Keep `fields` intentionally loose (flexible key-value) since exact structure depends on
-whatever sample PDFs the PM uploads — lock the outer shape now, let `fields` evolve per doc type.
-
-## Team Split (Daniel + Omar)
-
-**Omar — UI/Pages**
-- Onboarding flow: UI + animations
-- Onboarding: plan display (checklist + timeline scaffold generated from first doc)
-- Home page: visual timeline UI + nav
-- Meeting Prep: full page (UI + display of gaps/checklist/questions from Daniel's Gemma logic)
-
-**Daniel — Gemma + Document pages**
-- Onboarding: Gemma logic that reads first uploaded doc → generates checklist + timeline scaffold
-- Document Upload: UI + flow
-- Document Upload: Gemma extraction + field-flagging (empty/off fields)
-- Document Library: list + detail view
-- Gemma gap-detection + question-generation logic (feeds Meeting Prep)
-
-**Shared first task (~30 min):** Lock the timeline entry JSON schema together before splitting off.
-
-## MVP Cut List (not in scope)
-- No accounts/login
-- No multi-user (partner/provider shared views) — mentioned as roadmap in pitch only
-- No real scheduling/calendar integration
-- No voice input unless time allows
-
-## Demo Script (~2 min)
-1. Show offline/airplane mode ON, visible throughout
-2. Upload first synthetic document → onboarding profile auto-generates
-3. Upload 1-2 more documents → timeline populates, one field flagged and corrected live
-4. Go to Meeting Prep → show gap flag + drafted questions
-5. Point back to offline indicator — "none of this touched a network"

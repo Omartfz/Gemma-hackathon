@@ -10,17 +10,18 @@ import { extractWithOpenAI } from "./openai";
 import { parseExtractResult } from "./parse";
 
 function cloudProvider(): "openai" | "gemma" {
-  const raw = (process.env.EXTRACT_CLOUD_PROVIDER || "openai").toLowerCase();
-  return raw === "gemma" ? "gemma" : "openai";
+  const raw = (process.env.EXTRACT_CLOUD_PROVIDER || "gemma").toLowerCase();
+  if (raw === "openai") return "openai";
+  return "gemma";
 }
 
 async function runCloud(input: ExtractRequest): Promise<ExtractResponse> {
   const provider = cloudProvider();
   try {
     const text =
-      provider === "gemma"
-        ? await extractWithCloudGemma(input)
-        : await extractWithOpenAI(input);
+      provider === "openai"
+        ? await extractWithOpenAI(input)
+        : await extractWithCloudGemma(input);
     const parsed = parseExtractResult(text);
     if (!parsed) {
       throw new Error("Failed to parse model JSON");
@@ -30,6 +31,16 @@ async function runCloud(input: ExtractRequest): Promise<ExtractResponse> {
       result: parsed,
     };
   } catch {
+    // Gemma failed → try OpenAI if keyed, else fixtures
+    if (provider === "gemma" && process.env.OPENAI_API_KEY?.trim()) {
+      try {
+        const text = await extractWithOpenAI(input);
+        const parsed = parseExtractResult(text);
+        if (parsed) return { source: "openai", result: parsed };
+      } catch {
+        /* fall through */
+      }
+    }
     return {
       source: "fixture",
       result: fixtureForFilename(input.filename),
@@ -53,7 +64,7 @@ async function runLocal(input: ExtractRequest): Promise<ExtractResponse> {
   }
 }
 
-/** Orchestrate extract: OpenAI (temp cloud) / Ollama local / fixtures. */
+/** Orchestrate extract: Cloud Gemma (Google) / Ollama local / OpenAI fallback / fixtures. */
 export async function runExtract(
   input: ExtractRequest,
 ): Promise<ExtractResponse> {

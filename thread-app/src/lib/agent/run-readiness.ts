@@ -18,7 +18,7 @@ export type ReadinessRunResult = {
   score: number;
   docs: CheckDocumentResult[];
   summary: string;
-  summary_source: "openai" | "fixture";
+  summary_source: "gemma" | "openai" | "fixture";
   steps: AgentStep[];
 };
 

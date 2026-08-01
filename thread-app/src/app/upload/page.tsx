@@ -123,6 +123,18 @@ export default function UploadPage() {
         <Link href="/prep" className="underline">
           Meeting Prep
         </Link>
+        . Sample PDFs:{" "}
+        <a className="underline" href="/samples/CareOS_Template_1_Maternal_Baseline_Intake_Form.pdf">
+          intake
+        </a>
+        ,{" "}
+        <a className="underline" href="/samples/CareOS_Template_2_First_Trimester_Lab_Panel_Report.pdf">
+          labs
+        </a>
+        ,{" "}
+        <a className="underline" href="/samples/CareOS_Template_3_Early_Dating_Ultrasound_Report.pdf">
+          ultrasound
+        </a>
         .
       </p>
 

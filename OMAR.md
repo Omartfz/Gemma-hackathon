@@ -48,9 +48,12 @@ Fixed tool loop (not a free chat agent):
 **Code:** `src/lib/agent/*`, `src/app/api/readiness/route.ts`, Prep page  
 **Score:** `round(100 * (uploaded + 0.5 * need_check) / required)`
 
-## Phase 6 — Polish
+## Phase 6 — Polish (done)
 
-Library UI, mode toggle, synthetic PDFs in repo.
+- **Library** `/library` — list docs from store, expand for fields/flags/extract
+- **Mode toggle** in nav — Local (Ollama) / Cloud (OpenAI path today)
+- **Footer disclaimer** — decision-support / synthetic / not medical advice
+- **Samples** — `thread-app/public/samples/` CareOS intake, labs, ultrasound PDFs
 
 ---
 

@@ -1,3 +1,7 @@
+import {
+  generateWithGoogle,
+  hasGoogleApiKey,
+} from "@/lib/gemma/google-ai";
 import type { CheckDocumentResult, ComputeReadinessResult } from "./tools";
 
 function fixtureSummary(
@@ -34,24 +38,20 @@ function fixtureSummary(
   return parts.join(" ");
 }
 
-/** Short natural-language summary; OpenAI if keyed, else deterministic fixture. */
+export type SummarySource = "gemma" | "openai" | "fixture";
+
+/** Short natural-language summary; Gemma (Google) first, else OpenAI, else fixture. */
 export async function summarizeReadiness(input: {
   appointmentTitle: string;
   readiness: ComputeReadinessResult;
   checks: CheckDocumentResult[];
-}): Promise<{ summary: string; source: "openai" | "fixture" }> {
+}): Promise<{ summary: string; source: SummarySource }> {
   const fallback = fixtureSummary(
     input.appointmentTitle,
     input.readiness,
     input.checks,
   );
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return { summary: fallback, source: "fixture" };
-  }
-
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   const docLines = input.checks
     .map((c) => {
       const flags =
@@ -62,6 +62,33 @@ export async function summarizeReadiness(input: {
     })
     .join("\n");
 
+  const system = `You summarize pregnancy visit paperwork readiness for Thread.
+Decision-support only — never diagnose or give medical advice.
+Write 2-3 short sentences. Mention score and what's missing or needs a check.`;
+
+  const user = `Appointment: ${input.appointmentTitle}
+Score: ${input.readiness.score}%
+Counts: ${JSON.stringify(input.readiness.counts)}
+Docs:
+${docLines}`;
+
+  if (hasGoogleApiKey()) {
+    try {
+      const content = (
+        await generateWithGoogle({ system, user, json: false })
+      ).trim();
+      if (content) return { summary: content, source: "gemma" };
+    } catch {
+      /* try OpenAI */
+    }
+  }
+
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey?.trim()) {
+    return { summary: fallback, source: "fixture" };
+  }
+
+  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
   try {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -73,20 +100,8 @@ export async function summarizeReadiness(input: {
         model,
         temperature: 0.2,
         messages: [
-          {
-            role: "system",
-            content: `You summarize pregnancy visit paperwork readiness for Thread.
-Decision-support only — never diagnose or give medical advice.
-Write 2-3 short sentences. Mention score and what's missing or needs a check.`,
-          },
-          {
-            role: "user",
-            content: `Appointment: ${input.appointmentTitle}
-Score: ${input.readiness.score}%
-Counts: ${JSON.stringify(input.readiness.counts)}
-Docs:
-${docLines}`,
-          },
+          { role: "system", content: system },
+          { role: "user", content: user },
         ],
       }),
     });

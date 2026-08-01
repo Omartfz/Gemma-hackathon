@@ -25,6 +25,7 @@ const byType: Record<string, ResearchDocItem[]> = {
   prenatal_checkup: [intake, labs, insurance],
   dating_ultrasound: [intake, insurance, ultrasound],
   anatomy_scan: [insurance, ultrasound, labs],
+  postpartum_checkup: [intake, labs, insurance],
   labs: [insurance, labs, intake],
   other: [intake, insurance],
 };

@@ -53,18 +53,18 @@ function withNextAppt(
   };
 }
 
-/** Profile only — just finished the onboarding form. */
+/** Early prenatal — first OB intake, empty library. */
 const aishaOnboarded: DemoProfile = {
   id: "aisha-onboarded",
-  label: "Aisha — onboarded only",
+  label: "Aisha — first prenatal",
   name: "Aisha Khan",
   showcases: [
     "Onboarding form → store",
     "Empty timeline",
-    "First prenatal visit · all docs Missing",
+    "First prenatal / OB intake · all docs Missing",
   ],
   blurb:
-    "Week 8 · first prenatal / OB intake with Dr. Maya Patel. No docs uploaded yet — Meeting Prep shows 0/4.",
+    "Week 8 · first prenatal / OB intake with Dr. Maya Patel. Photo ID, insurance, intake, and prior labs/US all still missing — Meeting Prep 0/4.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -86,11 +86,11 @@ const aishaOnboarded: DemoProfile = {
       appointment_type: "prenatal_checkup",
       location: "Riverside Women's Health — Clinic A",
       notes:
-        "New OB intake (~8 weeks): history, exam, baseline labs ordered, dating ultrasound discussed.",
+        "New OB intake (~8 weeks): full history, physical exam, baseline prenatal labs ordered, dating ultrasound discussed. Bring photo ID, insurance card, medication list, and any prior pregnancy or early-scan records.",
       doc_reasons: {
         intake:
-          "New-patient maternal history, medications, and consent forms are completed at the first prenatal visit.",
-        labs: "Baseline prenatal labs (blood type, CBC, infectious disease screen) are ordered at or right after the first visit — bring any prior results.",
+          "New-patient maternal history, medications, allergies, and consent forms are completed at the first prenatal visit.",
+        labs: "Baseline prenatal labs (blood type/Rh, CBC, infectious disease screen, urine) are drawn at or right after the first visit — bring any prior results.",
         ultrasound:
           "Dating ultrasound (often 8–12 weeks) confirms gestational age; bring any early pregnancy scan reports if already done elsewhere.",
         insurance:
@@ -105,27 +105,31 @@ const aishaOnboarded: DemoProfile = {
           title: "Prenatal Appointment Timeline (Sinai Health)",
           url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/prenatal-appointment-timeline",
         },
+        {
+          title: "What to Expect at Your First Prenatal Appointment (Tufts Medicine)",
+          url: "https://www.tuftsmedicine.org/about-us/news/what-expect-your-first-prenatal-appointment-step-step-guide",
+        },
       ],
     },
   ),
 };
 
 /**
- * Canonical PLAN.md persona — Maya at week 12 with a flagged intake + labs.
- * Missing ultrasound + insurance so Meeting Prep shows mixed Have/Missing.
+ * Mid-pregnancy anatomy scan — partial prep with a flagged intake.
+ * Distinct from Aisha’s week-8 intake and Priya’s postpartum visit.
  */
 const mayaCanonical: DemoProfile = {
   id: "maya-canonical",
-  label: "Maya — Zone 1 mid-demo",
+  label: "Maya — anatomy scan",
   name: "Maya Rivera",
   showcases: [
     "Canonical demo persona",
     "Unresolved field flags",
-    "12-week visit · partial prep",
+    "Anatomy scan (~20w) · partial prep",
     "Timeline + library with 2 docs",
   ],
   blurb:
-    "Week 12 · prenatal checkup in the NT / first-trimester screening window. Intake needs check; labs uploaded; ultrasound & insurance missing.",
+    "Week 20 · anatomy / anomaly scan (18–22w). Intake needs check; first-trimester labs on file; prior dating US & insurance missing — mixed Have/Missing.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -133,50 +137,50 @@ const mayaCanonical: DemoProfile = {
       readinessScore: 45,
       profile: profile({
         name: "Maya Rivera",
-        gestational_week: 12,
+        gestational_week: 20,
         due_date: "2026-09-15",
         provider: { name: "Dr. Sarah Chen", role: "OB/GYN" },
         next_appointment: {
           date: "2026-03-14",
-          title: "12-week prenatal checkup",
+          title: "Anatomy scan (20-week ultrasound)",
         },
         onboarding_source: "form",
       }),
       documents: [
         doc({
           doc_id: "doc_maya_intake",
-          filename: "careos_template_1_intake.pdf",
+          filename: "CareOS_Template_1_Maternal_Baseline_Intake_Form.pdf",
           uploaded_at: "2026-02-12T15:04:00.000Z",
           linked_entry_id: "entry_maya_intake",
           checklist_item_id: "intake",
           raw_text_extracted:
-            "CareOS Maternal Baseline Intake — Maya Rivera, Week 12, Dr. Sarah Chen. Emergency contact phone blank.",
+            "CareOS Maternal Baseline Intake — Maya Rivera, Week 20 anatomy scan prep, Dr. Sarah Chen. Emergency contact phone blank.",
         }),
         doc({
           doc_id: "doc_maya_labs",
-          filename: "careos_template_2_labs.pdf",
+          filename: "CareOS_Template_2_First_Trimester_Lab_Panel_Report.pdf",
           uploaded_at: "2026-02-13T11:20:00.000Z",
           linked_entry_id: "entry_maya_labs",
           checklist_item_id: "labs",
           raw_text_extracted:
-            "CareOS First Trimester Lab Panel — Maya Rivera. Blood type A+, Hgb 12.4, Hep B negative.",
+            "CareOS First Trimester Lab Panel — Maya Rivera. Blood type A+, Hgb 12.4, Hep B negative. Glucose screen not yet due (24–28w).",
         }),
       ],
       entries: [
         entry({
           id: "entry_maya_intake",
           date: "2026-02-12",
-          trimester: "first",
+          trimester: "second",
           type: "intake",
           provider: { name: "Dr. Sarah Chen", role: "OB/GYN" },
           category: "intake",
           title: "Maternal Baseline Intake Form",
           summary:
-            "First-trimester intake for Maya Rivera. Most fields complete; emergency contact phone is blank.",
+            "Updated intake ahead of Maya Rivera’s anatomy scan. Most fields complete; emergency contact phone is blank.",
           fields: {
             patient_name: "Maya Rivera",
             dob: "1994-06-12",
-            gestational_week: 12,
+            gestational_week: 20,
             primary_provider: "Dr. Sarah Chen",
             allergies: "NKDA",
             emergency_contact_name: "Luis Rivera",
@@ -192,7 +196,7 @@ const mayaCanonical: DemoProfile = {
           ],
           source_doc: {
             doc_id: "doc_maya_intake",
-            filename: "careos_template_1_intake.pdf",
+            filename: "CareOS_Template_1_Maternal_Baseline_Intake_Form.pdf",
             uploaded_at: "2026-02-12T15:04:00.000Z",
           },
         }),
@@ -205,7 +209,7 @@ const mayaCanonical: DemoProfile = {
           category: "lab",
           title: "First Trimester Lab Panel Report",
           summary:
-            "Prenatal lab panel with CBC, blood type, and infectious disease screen.",
+            "Prenatal lab panel with CBC, blood type, and infectious disease screen — still referenced at the anatomy-scan visit.",
           fields: {
             patient_name: "Maya Rivera",
             collection_date: "2026-02-10",
@@ -218,7 +222,7 @@ const mayaCanonical: DemoProfile = {
           flags: [],
           source_doc: {
             doc_id: "doc_maya_labs",
-            filename: "careos_template_2_labs.pdf",
+            filename: "CareOS_Template_2_First_Trimester_Lab_Panel_Report.pdf",
             uploaded_at: "2026-02-13T11:20:00.000Z",
           },
         }),
@@ -226,18 +230,19 @@ const mayaCanonical: DemoProfile = {
     },
     "appt_maya",
     {
-      appointment_type: "prenatal_checkup",
-      location: "Northside OB Clinic — Suite 210",
+      appointment_type: "anatomy_scan",
+      location: "Northside Imaging — Maternal Ultrasound",
       notes:
-        "Routine ~12-week follow-up in the 11–14 week first-trimester screening / NT window. Review labs; confirm dating US or NT referral.",
+        "Detailed fetal anatomy / anomaly ultrasound (~18–22 weeks). Reviews organ development, placenta location, and amniotic fluid. Bring prior dating or NT report for GA correlation; glucose screening is usually later (24–28w).",
+      provider: { name: "Dr. Ana Park", role: "Maternal-Fetal Medicine" },
       doc_reasons: {
         intake:
-          "Updated intake/history so the provider can counsel on genetic screening options at this visit.",
-        labs: "First-trimester panel results (blood type, CBC, infectious screens) should be available for review.",
+          "Updated history and emergency contacts so imaging and OB teams share a complete chart before a long anatomy scan.",
+        labs: "Prior prenatal panel (blood type, CBC, infectious screens) should be available; GDM glucose testing is typically separate at 24–28 weeks.",
         ultrasound:
-          "Dating or NT ultrasound report (11–14 weeks) confirms GA and supports aneuploidy screening discussion.",
+          "Prior dating or NT ultrasound report (11–14 weeks) confirms gestational age so the anatomy window is scheduled correctly — bring the report if imaging was done elsewhere.",
         insurance:
-          "Insurance card for check-in and coverage of screening ultrasound / lab add-ons.",
+          "Insurance card for imaging check-in and coverage verification of the detailed second-trimester scan.",
       },
       research_citations: [
         {
@@ -245,27 +250,35 @@ const mayaCanonical: DemoProfile = {
           url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/prenatal-appointment-timeline",
         },
         {
-          title: "Early Prenatal Care Checklist (Perinatal Services BC)",
-          url: "https://www.perinatalservicesbc.ca/Documents/Resources/Checklists/PSBC_Prenatal_Checklist.pdf",
+          title: "20 Week Ultrasound / Anatomy Scan (Cleveland Clinic)",
+          url: "https://my.clevelandclinic.org/health/diagnostics/22644-20-week-ultrasound",
+        },
+        {
+          title: "Nuchal Translucency or Early Anatomy Ultrasound (Sinai Health)",
+          url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/nuchal-translucency-or-early-anatomy-ultrasound",
         },
       ],
     },
   ),
 };
 
-/** All Zone 1 checklist items satisfied — high readiness. */
+/**
+ * Postpartum comprehensive visit — Zone 1 checklist mapped onto
+ * discharge / birth / prenatal US / insurance paperwork patients typically bring.
+ * gestational_week holds postpartum week (schema has no separate postpartum field).
+ */
 const priyaReady: DemoProfile = {
   id: "priya-ready",
-  label: "Priya — visit-ready",
+  label: "Priya — postpartum ready",
   name: "Priya Desai",
   showcases: [
     "Full Zone 1 checklist (Have ×4)",
-    "NT / dating ultrasound visit",
+    "6-week postpartum checkup",
     "High readinessScore",
-    "Document Library with multiple types",
+    "Discharge summary + birth record in library",
   ],
   blurb:
-    "Week 12 · NT / first-trimester dating ultrasound with Dr. Helen Cho. Intake, labs, dating US, and insurance all on file — Meeting Prep 4/4.",
+    "6 weeks postpartum · comprehensive checkup with Dr. Helen Cho after vaginal birth. Discharge summary, birth record, prior anatomy US, and insurance on file — Meeting Prep 4/4.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -273,39 +286,43 @@ const priyaReady: DemoProfile = {
       readinessScore: 92,
       profile: profile({
         name: "Priya Desai",
-        gestational_week: 12,
-        due_date: "2026-09-01",
+        /** Postpartum week 6 — profile field is gestational_week only. */
+        gestational_week: 6,
+        due_date: "2026-01-15",
         provider: { name: "Dr. Helen Cho", role: "OB/GYN" },
         next_appointment: {
-          date: "2026-03-08",
-          title: "NT / first-trimester ultrasound",
+          date: "2026-03-01",
+          title: "6-week postpartum checkup",
         },
         onboarding_source: "form",
       }),
       documents: [
         doc({
           doc_id: "doc_priya_intake",
-          filename: "intake_baseline.pdf",
-          uploaded_at: "2026-01-20T14:00:00.000Z",
+          filename: "postpartum_intake.pdf",
+          uploaded_at: "2026-02-20T14:00:00.000Z",
           linked_entry_id: "entry_priya_intake",
           checklist_item_id: "intake",
-          raw_text_extracted: "Baseline intake — Priya Desai, complete and signed.",
+          raw_text_extracted:
+            "Postpartum visit questionnaire — Priya Desai, SVD 2026-01-15 at 39w2d. Bleeding decreasing, breastfeeding, mood screen pending visit.",
         }),
         doc({
           doc_id: "doc_priya_labs",
-          filename: "lab_panel_w11.pdf",
-          uploaded_at: "2026-02-01T10:00:00.000Z",
+          filename: "hospital_discharge_summary.pdf",
+          uploaded_at: "2026-01-17T10:00:00.000Z",
           linked_entry_id: "entry_priya_labs",
           checklist_item_id: "labs",
-          raw_text_extracted: "First trimester labs — blood type O+, Hgb 11.9.",
+          raw_text_extracted:
+            "Hospital discharge summary — Priya Desai. SVD 39w2d, GBS negative, blood type O+, estimated blood loss 300 mL, newborn Apgar 8/9.",
         }),
         doc({
           doc_id: "doc_priya_us",
-          filename: "dating_ultrasound.pdf",
-          uploaded_at: "2026-02-05T16:30:00.000Z",
+          filename: "anatomy_ultrasound_w20.pdf",
+          uploaded_at: "2025-11-05T16:30:00.000Z",
           linked_entry_id: "entry_priya_us",
           checklist_item_id: "ultrasound",
-          raw_text_extracted: "Dating US — GA 12w, EDD 2026-09-01, FHR 156.",
+          raw_text_extracted:
+            "Anatomy US 20w — normal survey, anterior placenta, EDD 2026-01-15. Kept on file from prenatal course.",
         }),
         doc({
           doc_id: "doc_priya_ins",
@@ -319,81 +336,91 @@ const priyaReady: DemoProfile = {
       entries: [
         entry({
           id: "entry_priya_intake",
-          date: "2026-01-20",
-          trimester: "first",
+          date: "2026-02-20",
+          trimester: "postpartum",
           type: "intake",
           provider: { name: "Dr. Helen Cho", role: "OB/GYN" },
           category: "intake",
-          title: "Maternal Baseline Intake Form",
-          summary: "Complete signed intake for Priya Desai.",
+          title: "Postpartum Visit Questionnaire",
+          summary:
+            "Recovery, feeding, and mood checklist completed ahead of the 6-week postpartum visit.",
           fields: {
             patient_name: "Priya Desai",
-            gestational_week: 12,
+            postpartum_week: 6,
+            delivery_date: "2026-01-15",
+            delivery_type: "spontaneous vaginal delivery",
             primary_provider: "Dr. Helen Cho",
             allergies: "Penicillin",
+            breastfeeding: true,
             signature_present: true,
           },
           flags: [],
           source_doc: {
             doc_id: "doc_priya_intake",
-            filename: "intake_baseline.pdf",
-            uploaded_at: "2026-01-20T14:00:00.000Z",
+            filename: "postpartum_intake.pdf",
+            uploaded_at: "2026-02-20T14:00:00.000Z",
           },
         }),
         entry({
           id: "entry_priya_labs",
-          date: "2026-02-01",
-          trimester: "first",
+          date: "2026-01-17",
+          trimester: "postpartum",
           type: "lab",
           provider: { name: "Dr. Helen Cho", role: "OB/GYN" },
           category: "lab",
-          title: "First Trimester Lab Panel Report",
-          summary: "CBC and prenatal panel on file.",
+          title: "Hospital Discharge Summary",
+          summary:
+            "Delivery and discharge record with blood type, GBS status, and newborn Apgars — typical paperwork for the postpartum checkup.",
           fields: {
             patient_name: "Priya Desai",
-            collection_date: "2026-02-01",
+            delivery_date: "2026-01-15",
+            gestational_age_at_birth: "39w2d",
             blood_type: "O+",
-            hemoglobin_g_dl: 11.9,
+            gbs_status: "negative",
+            estimated_blood_loss_ml: 300,
+            newborn_apgar: "8/9",
           },
           flags: [],
           source_doc: {
             doc_id: "doc_priya_labs",
-            filename: "lab_panel_w11.pdf",
-            uploaded_at: "2026-02-01T10:00:00.000Z",
+            filename: "hospital_discharge_summary.pdf",
+            uploaded_at: "2026-01-17T10:00:00.000Z",
           },
         }),
         entry({
           id: "entry_priya_us",
-          date: "2026-02-05",
-          trimester: "first",
+          date: "2025-11-05",
+          trimester: "second",
           type: "ultrasound",
           provider: { name: "Dr. Ana Park", role: "Maternal-Fetal Medicine" },
           category: "ultrasound",
-          title: "Early Dating Ultrasound Report",
-          summary: "Dating ultrasound consistent with ~12 weeks.",
+          title: "Anatomy Ultrasound Report",
+          summary:
+            "Prenatal anatomy survey kept in the chart; Zone 1 still uses the ultrasound checklist slot for visit-ready demos.",
           fields: {
             patient_name: "Priya Desai",
-            exam_date: "2026-02-05",
-            gestational_age_weeks: 12,
-            estimated_due_date: "2026-09-01",
-            fetal_heart_rate_bpm: 156,
+            exam_date: "2025-11-05",
+            gestational_age_weeks: 20,
+            estimated_due_date: "2026-01-15",
+            placenta: "anterior",
+            survey: "normal",
           },
           flags: [],
           source_doc: {
             doc_id: "doc_priya_us",
-            filename: "dating_ultrasound.pdf",
-            uploaded_at: "2026-02-05T16:30:00.000Z",
+            filename: "anatomy_ultrasound_w20.pdf",
+            uploaded_at: "2025-11-05T16:30:00.000Z",
           },
         }),
         entry({
           id: "entry_priya_ins",
           date: "2026-01-20",
-          trimester: "first",
+          trimester: "postpartum",
           type: "note",
           provider: { name: "Dr. Helen Cho", role: "OB/GYN" },
           category: "note",
           title: "Insurance Card",
-          summary: "Insurance card on file.",
+          summary: "Insurance card on file for postpartum visit check-in.",
           fields: {
             payer_name: "Summit Mutual",
             member_id: "SM-992184",
@@ -410,28 +437,31 @@ const priyaReady: DemoProfile = {
     },
     "appt_priya",
     {
-      appointment_type: "dating_ultrasound",
-      location: "Summit Imaging — Maternal-Fetal Unit",
+      appointment_type: "postpartum_checkup",
+      location: "Summit Women's Health — Clinic B",
       notes:
-        "Nuchal translucency / first-trimester ultrasound (11–14 weeks). Prior dating report and labs on file for correlation.",
-      provider: { name: "Dr. Ana Park", role: "Maternal-Fetal Medicine" },
+        "Comprehensive postpartum visit (~4–12 weeks after birth; often ~6 weeks). Review physical recovery, mood, infant feeding, contraception, and birth details. Bring hospital discharge paperwork and a symptom/question list. ACOG also recommends earlier contact within 3 weeks when needed.",
       doc_reasons: {
         intake:
-          "Completed intake confirms history and consent before genetic screening ultrasound.",
-        labs: "First-trimester serum results (or panel) pair with NT imaging for integrated screening when offered.",
+          "Postpartum questionnaire / updated history covers bleeding, incision or perineal healing, mood, feeding, and contraception preferences.",
+        labs: "Hospital discharge summary (and birth record details such as blood type, GBS, complications) helps the OB review delivery without hunting the inpatient chart.",
         ultrasound:
-          "Prior dating ultrasound report establishes GA so the NT window (11–13+6 weeks) is scheduled correctly.",
+          "Prior prenatal ultrasound reports (e.g. anatomy scan) often remain in the longitudinal chart; mapped here to the Zone 1 ultrasound checklist slot.",
         insurance:
-          "Insurance card required for imaging check-in and coverage verification.",
+          "Insurance card for check-in — coverage for postpartum visits can change after delivery, so verifying benefits matters.",
       },
       research_citations: [
         {
-          title: "Early Prenatal Care Checklist (Perinatal Services BC)",
-          url: "https://www.perinatalservicesbc.ca/Documents/Resources/Checklists/PSBC_Prenatal_Checklist.pdf",
+          title: "Optimizing Postpartum Care (ACOG)",
+          url: "https://www.acog.org/clinical/clinical-guidance/committee-opinion/articles/2018/05/optimizing-postpartum-care",
         },
         {
-          title: "Antenatal Screening Guidelines (RCP Nova Scotia)",
-          url: "https://rcp.nshealth.ca/sites/default/files/clinical-practice-guidelines/antenatal%20screening%20guidelines%2011X17%20Rev%20July%202024.pdf",
+          title: "What to Expect at a Postpartum Checkup (ACOG)",
+          url: "https://www.acog.org/womens-health/experts-and-stories/the-latest/what-to-expect-at-a-postpartum-checkup-and-why-the-visit-matters",
+        },
+        {
+          title: "Prenatal Appointment Timeline — six weeks postpartum (Sinai Health)",
+          url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/prenatal-appointment-timeline",
         },
       ],
     },

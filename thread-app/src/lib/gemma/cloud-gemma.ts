@@ -1,21 +1,16 @@
+import { buildExtractUserPrompt, EXTRACT_SYSTEM_PROMPT } from "./prompt";
+import { generateWithGoogle } from "./google-ai";
 import type { ModelExtractInput } from "./openai";
 
-/**
- * Future Google AI / Gemma cloud client.
- * Not used in Phase 2 — set GOOGLE_API_KEY / GEMINI_API_KEY and wire
- * EXTRACT_CLOUD_PROVIDER=gemma later to swap off OpenAI.
- */
+/** Cloud Gemma via Google AI Generative Language API. */
 export async function extractWithCloudGemma(
-  _input: ModelExtractInput,
+  input: ModelExtractInput,
 ): Promise<string> {
-  const key = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-  if (!key) {
-    throw new Error(
-      "Cloud Gemma not configured (GOOGLE_API_KEY / GEMINI_API_KEY missing)",
-    );
-  }
-
-  throw new Error(
-    "Cloud Gemma client is stubbed. Set EXTRACT_CLOUD_PROVIDER=openai for now, or implement Generative Language API call here.",
-  );
+  return generateWithGoogle({
+    system: EXTRACT_SYSTEM_PROMPT,
+    user: buildExtractUserPrompt(input),
+    imageBase64: input.imageBase64,
+    mimeType: input.mimeType,
+    json: true,
+  });
 }

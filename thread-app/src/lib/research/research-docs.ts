@@ -3,7 +3,7 @@ import type {
   ResearchDocsResponse,
 } from "@/lib/types";
 import { fixtureResearchDocs } from "./fixtures";
-import { structureDocsWithOpenAI } from "./parse";
+import { structureDocsWithModel } from "./parse";
 import { searchTavily } from "./tavily";
 
 function buildQuery(input: ResearchDocsRequest): string {
@@ -23,7 +23,7 @@ function buildQuery(input: ResearchDocsRequest): string {
     .join(" ");
 }
 
-/** Research required docs via Tavily (+ optional OpenAI structure), else fixtures. */
+/** Research required docs via Tavily (+ Gemma/OpenAI structure), else fixtures. */
 export async function runResearchDocs(
   input: ResearchDocsRequest,
 ): Promise<ResearchDocsResponse> {
@@ -31,7 +31,7 @@ export async function runResearchDocs(
 
   try {
     const { hits, citations } = await searchTavily(buildQuery(input));
-    const structured = await structureDocsWithOpenAI({
+    const structured = await structureDocsWithModel({
       appointment_type: appointmentType,
       gestational_week: input.gestational_week,
       provider_role: input.provider_role,
