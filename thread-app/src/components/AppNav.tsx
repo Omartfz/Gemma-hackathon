@@ -8,6 +8,7 @@ const links = [
   { href: "/upload", label: "Upload" },
   { href: "/prep", label: "Meeting Prep" },
   { href: "/library", label: "Library" },
+  { href: "/demo", label: "Demo" },
 ] as const;
 
 export function AppNav() {
