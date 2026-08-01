@@ -3,9 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { ZONE1_REQUIRED_DOCS } from "@/lib/checklist-zone1";
-import { extractDocument } from "@/lib/gemma/extract";
-import type { ExtractionResult } from "@/lib/gemma/types";
-import { buildOnboardingResult, type OnboardingFileResult, type OnboardingResult } from "@/lib/onboarding";
+import {
+  buildOnboardingResult,
+  extractDocument,
+  type OnboardingFileResult,
+  type OnboardingResult,
+} from "@/lib/onboarding";
 import { updateState } from "@/lib/store";
 
 const SAMPLE_DOC_NAMES = [
@@ -65,7 +68,7 @@ export default function OnboardingPage() {
     const collected: OnboardingFileResult[] = [];
     for (let i = 0; i < inputFiles.length; i++) {
       setStatuses((prev) => prev.map((s, idx) => (idx === i ? "reading" : s)));
-      const extraction: ExtractionResult = await extractDocument(inputFiles[i]);
+      const extraction = await extractDocument(inputFiles[i]);
       collected.push({ file: inputFiles[i], extraction });
       setStatuses((prev) => prev.map((s, idx) => (idx === i ? "done" : s)));
     }
@@ -87,11 +90,11 @@ export default function OnboardingPage() {
     router.push("/");
   }
 
-  const uploadedDocTypes = new Set(results.map((r) => r.extraction.entry.type));
+  const uploadedDocTypes = new Set(results.map((r) => r.extraction.result.type));
   const missingRequiredDocs = ZONE1_REQUIRED_DOCS.filter(
     (doc) => doc.doc_type && !uploadedDocTypes.has(doc.doc_type)
   );
-  const flagCount = results.reduce((sum, r) => sum + r.extraction.entry.flags.length, 0);
+  const flagCount = results.reduce((sum, r) => sum + r.extraction.result.flags.length, 0);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-10">
@@ -256,11 +259,11 @@ export default function OnboardingPage() {
                 key={file.name}
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4"
               >
-                <p className="text-sm font-medium text-[var(--ink)]">{extraction.entry.title}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{extraction.entry.summary}</p>
-                {extraction.entry.flags.length > 0 && (
+                <p className="text-sm font-medium text-[var(--ink)]">{extraction.result.title}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{extraction.result.summary}</p>
+                {extraction.result.flags.length > 0 && (
                   <ul className="mt-2 flex flex-wrap gap-2">
-                    {extraction.entry.flags.map((flag) => (
+                    {extraction.result.flags.map((flag) => (
                       <li
                         key={flag.field}
                         className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs text-[var(--ink)]"

@@ -26,11 +26,12 @@ function normalizeAppointment(raw: Appointment): Appointment {
   };
 }
 
-/** Build a Zone 1 appointment from the profile's next visit. */
+/** Build a Zone 1 appointment from the profile's next visit, if one is known. */
 export function appointmentFromProfile(
   profile: NonNullable<AppState["profile"]>,
   id = "appt_next",
-): Appointment {
+): Appointment | null {
+  if (!profile.next_appointment) return null;
   return {
     id,
     date: profile.next_appointment.date,
@@ -47,13 +48,16 @@ export function appointmentFromProfile(
 
 /**
  * If appointments are empty but profile has a next visit, seed one Zone 1 appointment.
- * Persists when storage is available.
+ * Persists when storage is available. No-ops when the profile has no next_appointment
+ * yet (doc-driven onboarding can leave it unset until a visit is actually scheduled).
  */
 export function ensureAppointments(state: AppState): AppState {
   if (state.appointments.length > 0 || !state.profile) return state;
+  const appointment = appointmentFromProfile(state.profile);
+  if (!appointment) return state;
   const next: AppState = {
     ...state,
-    appointments: [appointmentFromProfile(state.profile)],
+    appointments: [appointment],
   };
   saveState(next);
   return next;
