@@ -9,7 +9,7 @@ import {
   type OnboardingFileResult,
   type OnboardingResult,
 } from "@/lib/onboarding";
-import { updateState } from "@/lib/store";
+import { ensureAppointments, updateState } from "@/lib/store";
 
 const SAMPLE_DOC_NAMES = [
   "CareOS_Template_1_Maternal_Baseline_Intake_Form.pdf",
@@ -81,12 +81,16 @@ export default function OnboardingPage() {
   function handleGoToHome() {
     if (!onboardingResult) return;
     const { profile, entries, documents } = onboardingResult;
-    updateState((prev) => ({
+    const next = updateState((prev) => ({
       ...prev,
       profile,
       entries,
       documents,
+      // Let ensureAppointments seed from profile.next_appointment
+      appointments:
+        prev.appointments.length > 0 ? prev.appointments : [],
     }));
+    ensureAppointments(next);
     router.push("/");
   }
 
@@ -189,7 +193,8 @@ export default function OnboardingPage() {
 
           <div className="mt-8 flex items-center justify-between">
             <p className="text-xs text-[var(--muted)]">
-              Processed on this device — nothing is uploaded to a server.
+              Extract runs via Thread&apos;s API (Cloud/Local Gemma mode in nav).
+              Synthetic / decision-support only.
             </p>
             <button
               type="button"
@@ -206,7 +211,8 @@ export default function OnboardingPage() {
       {stage === "processing" && (
         <>
           <p className="mt-3 text-[var(--muted)]">
-            Running locally via Gemma. This can take a few seconds per document.
+            Reading each document with the extract API. This can take a few
+            seconds per file.
           </p>
           <ul className="mt-6 space-y-2">
             {files.map((file, i) => (
@@ -259,8 +265,15 @@ export default function OnboardingPage() {
                 key={file.name}
                 className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4"
               >
-                <p className="text-sm font-medium text-[var(--ink)]">{extraction.result.title}</p>
-                <p className="mt-1 text-sm text-[var(--muted)]">{extraction.result.summary}</p>
+                <p className="text-sm font-medium text-[var(--ink)]">
+                  {extraction.result.title}
+                </p>
+                <p className="mt-0.5 text-xs uppercase tracking-wide text-[var(--muted)]">
+                  Source: {extraction.source}
+                </p>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  {extraction.result.summary}
+                </p>
                 {extraction.result.flags.length > 0 && (
                   <ul className="mt-2 flex flex-wrap gap-2">
                     {extraction.result.flags.map((flag) => (

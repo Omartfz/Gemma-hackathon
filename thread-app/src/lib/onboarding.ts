@@ -35,22 +35,40 @@ function fallbackExtraction(filename: string): ExtractResponse {
       type: "note",
       trimester: "first",
       fields: {},
-      flags: [{ field: "document_type", issue: "unrecognized_document", resolved: false }],
+      flags: [
+        {
+          field: "document_type",
+          issue: "unrecognized_document",
+          resolved: false,
+        },
+      ],
       raw_text_extracted: "",
     },
   };
 }
 
-/** Calls the same /api/extract route the Upload page uses. */
+/** Calls the same /api/extract route the Upload page uses (sends PDF/image bytes). */
 export async function extractDocument(file: File): Promise<ExtractResponse> {
   try {
+    const mimeType = file.type || "application/octet-stream";
     const body: Record<string, string> = {
       filename: file.name,
       mode: loadState().gemmaMode,
-      mimeType: file.type || "application/octet-stream",
+      mimeType,
     };
-    if (file.type.startsWith("image/")) {
+
+    // Always send file bytes — PDFs need text extraction server-side; images go to vision.
+    if (
+      mimeType.startsWith("image/") ||
+      mimeType === "application/pdf" ||
+      file.name.toLowerCase().endsWith(".pdf")
+    ) {
       body.imageBase64 = await fileToBase64(file);
+      if (!body.mimeType || body.mimeType === "application/octet-stream") {
+        if (file.name.toLowerCase().endsWith(".pdf")) {
+          body.mimeType = "application/pdf";
+        }
+      }
     }
 
     const res = await fetch("/api/extract", {
@@ -86,17 +104,53 @@ function pickDate(result: ExtractResult): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Extraction field-key names vary by document type / model output, so try a few. */
-function pickProviderName(fields: ExtractResult["fields"]): string | undefined {
-  const keys = ["primary_provider", "ordering_provider", "interpreting_provider", "attending_md"];
+function pickNumber(
+  fields: ExtractResult["fields"],
+  keys: string[],
+): number | undefined {
   for (const key of keys) {
     const value = fields[key];
-    if (typeof value === "string" && value.trim()) return value;
+    if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+      return value;
+    }
+    if (typeof value === "string" && value.trim()) {
+      const n = Number(value);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
   }
   return undefined;
 }
 
-export function buildOnboardingResult(results: OnboardingFileResult[]): OnboardingResult {
+function pickString(
+  fields: ExtractResult["fields"],
+  keys: string[],
+): string | undefined {
+  for (const key of keys) {
+    const value = fields[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function addDaysISO(days: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Extraction field-key names vary by document type / model output, so try a few. */
+function pickProviderName(fields: ExtractResult["fields"]): string | undefined {
+  return pickString(fields, [
+    "primary_provider",
+    "ordering_provider",
+    "interpreting_provider",
+    "attending_md",
+  ]);
+}
+
+export function buildOnboardingResult(
+  results: OnboardingFileResult[],
+): OnboardingResult {
   const uploadedAt = new Date().toISOString();
 
   let name = "Patient";
@@ -111,7 +165,10 @@ export function buildOnboardingResult(results: OnboardingFileResult[]): Onboardi
     const { result } = extraction;
     const entryId = newEntryId();
     const docId = newDocId();
-    const provider = { name: pickProviderName(result.fields) ?? "Unknown", role: "OB/GYN" };
+    const provider = {
+      name: pickProviderName(result.fields) ?? "Unknown",
+      role: "OB/GYN",
+    };
 
     entries.push({
       id: entryId,
@@ -136,21 +193,58 @@ export function buildOnboardingResult(results: OnboardingFileResult[]): Onboardi
       checklist_item_id: result.checklist_item_id,
     });
 
-    if (typeof result.fields.patient_name === "string") name = result.fields.patient_name;
-    if (typeof result.fields.gestational_week === "number" && result.fields.gestational_week > 0) {
-      gestationalWeek = result.fields.gestational_week;
-    }
-    if (typeof result.fields.estimated_due_date === "string") dueDate = result.fields.estimated_due_date;
+    const patientName = pickString(result.fields, [
+      "patient_name",
+      "subscriber_name",
+      "name",
+    ]);
+    if (patientName) name = patientName;
+
+    const week = pickNumber(result.fields, [
+      "gestational_week",
+      "gestational_age_weeks",
+      "ga_weeks",
+    ]);
+    if (week && week > gestationalWeek) gestationalWeek = week;
+
+    const edd = pickString(result.fields, [
+      "estimated_due_date",
+      "due_date",
+      "edd",
+    ]);
+    if (edd) dueDate = edd;
+
     if (provider.name !== "Unknown") providerName = provider.name;
   }
 
   entries.sort((a, b) => a.date.localeCompare(b.date));
+
+  if (!gestationalWeek && dueDate) {
+    const due = Date.parse(dueDate);
+    if (!Number.isNaN(due)) {
+      const weeksLeft = Math.round(
+        (due - Date.now()) / (7 * 24 * 60 * 60 * 1000),
+      );
+      const approx = 40 - weeksLeft;
+      if (approx > 0 && approx < 45) gestationalWeek = approx;
+    }
+  }
+  if (!gestationalWeek) gestationalWeek = 12;
 
   const profile: PatientProfile = {
     name,
     gestational_week: gestationalWeek,
     due_date: dueDate,
     provider: { name: providerName ?? "Unknown", role: "OB/GYN" },
+    next_appointment: {
+      date: addDaysISO(14),
+      title:
+        gestationalWeek <= 14
+          ? "Prenatal checkup"
+          : gestationalWeek <= 28
+            ? "Anatomy / prenatal follow-up"
+            : "Prenatal checkup",
+    },
     onboarding_source: "document",
   };
 

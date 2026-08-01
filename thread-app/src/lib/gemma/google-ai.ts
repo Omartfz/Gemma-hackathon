@@ -91,7 +91,9 @@ export async function generateWithGoogle(
   if (input.imageBase64) {
     const mime = input.mimeType?.startsWith("image/")
       ? input.mimeType
-      : "image/png";
+      : input.mimeType === "application/pdf"
+        ? "application/pdf"
+        : "image/png";
     parts.push({
       inline_data: {
         mime_type: mime,

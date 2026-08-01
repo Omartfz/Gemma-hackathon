@@ -21,7 +21,7 @@ export async function extractWithOllama(
     content: userText,
   };
 
-  if (input.imageBase64) {
+  if (input.imageBase64 && input.mimeType?.startsWith("image/")) {
     message.images = [input.imageBase64];
   }
 

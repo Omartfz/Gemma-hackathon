@@ -25,14 +25,12 @@ export async function extractWithOpenAI(
 
   const userContent: ContentPart[] = [{ type: "text", text: userText }];
 
-  if (input.imageBase64) {
-    const mime = input.mimeType?.startsWith("image/")
-      ? input.mimeType
-      : "image/png";
+  // Vision only for real images — PDFs are converted to textHint upstream.
+  if (input.imageBase64 && input.mimeType?.startsWith("image/")) {
     userContent.push({
       type: "image_url",
       image_url: {
-        url: `data:${mime};base64,${input.imageBase64}`,
+        url: `data:${input.mimeType};base64,${input.imageBase64}`,
       },
     });
   }

@@ -72,8 +72,12 @@ export default function UploadPage() {
         mimeType: file.type || "application/octet-stream",
       };
 
-      if (file.type.startsWith("image/")) {
+      const isPdf =
+        file.type === "application/pdf" ||
+        file.name.toLowerCase().endsWith(".pdf");
+      if (file.type.startsWith("image/") || isPdf) {
         body.imageBase64 = await fileToBase64(file);
+        if (isPdf) body.mimeType = "application/pdf";
       }
 
       const res = await fetch("/api/extract", {
