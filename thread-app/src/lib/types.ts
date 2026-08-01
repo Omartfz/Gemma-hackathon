@@ -53,3 +53,30 @@ export type AppState = {
   gemmaMode: GemmaMode;
   readinessScore: number | null;
 };
+
+/** Result of document extraction (LLM or fixture). */
+export type ExtractResult = {
+  title: string;
+  summary: string;
+  type: TimelineEntry["type"];
+  trimester: "first" | "second" | "third" | "postpartum";
+  checklist_item_id?: string;
+  fields: Record<string, string | number | boolean | null>;
+  flags: DocFlag[];
+  raw_text_extracted: string;
+};
+
+export type ExtractSource = "openai" | "local" | "cloud" | "fixture";
+
+export type ExtractResponse = {
+  source: ExtractSource;
+  result: ExtractResult;
+};
+
+export type ExtractRequest = {
+  mode?: GemmaMode;
+  filename: string;
+  mimeType?: string;
+  textHint?: string;
+  imageBase64?: string;
+};
