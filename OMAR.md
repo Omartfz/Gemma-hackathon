@@ -3,8 +3,8 @@
 Work lives in [`thread-app/`](thread-app/). Team contract: [`PLAN.md`](PLAN.md).  
 Agent guidance: [`.agents/skills/gemma-dev`](.agents/skills/gemma-dev).
 
-**Owns:** Upload Docs, Meeting Prep, Document Library, extract client, readiness/agent tools.  
-**Daniel owns:** Onboarding form + Home (reads shared store).
+**Owns:** Schedule (book + list), Upload Docs, Meeting Prep, Document Library, extract client, Tavily research, readiness/agent tools.  
+**Daniel owns:** Onboarding form + Home (visual trimester timeline of uploaded docs).
 
 ---
 
@@ -12,35 +12,45 @@ Agent guidance: [`.agents/skills/gemma-dev`](.agents/skills/gemma-dev).
 
 Shared store/types + `POST /api/extract` (OpenAI temp / Ollama / fixtures).
 
-## Phase 3 — Prep by appointment + targeted Upload (done)
+## Phase 3 (done)
 
-**Still not a full agent loop** — statuses are computed from store data.
+Prep by appointment + targeted Upload (`missing` / `uploaded` / `need_check`).
 
-### Meeting Prep `/prep`
-- Lists **upcoming appointments**
-- Under each: required docs with **why** + status:
-  - `missing` — no doc for that appointment + checklist id
-  - `uploaded` — saved, no open flags
-  - `need_check` — saved, unresolved extract flags
+## Phase 4 — Schedule + book + Tavily docs (done)
 
-### Upload `/upload`
-1. Select **appointment**
-2. Select **document title** from that appointment’s required list
-3. File → Extract → Save (writes `appointment_id` + `checklist_item_id`)
+### Schedule `/schedule`
+- Lists upcoming (and completed) appointments from the store
+- CTA: Book appointment
 
-### Data
-- `Appointment` on `AppState.appointments`
-- `LibraryDoc.appointment_id`
-- Seed: `ensureAppointments()` from `profile.next_appointment` + Zone 1 required ids
-- Helpers: `getAppointmentPrepViews`, `saveExtractToStore({ appointmentId, checklistItemId, ... })`
+### Book `/schedule/book`
+1. User fills type, date, location, provider, week, notes
+2. **Research documents** → `POST /api/research-docs`
+3. Review suggested docs (why + citations), confirm
+4. Saves new `Appointment` with `required_doc_ids`, `doc_reasons`, `research_citations`
 
-## Next — Agentic readiness
+### Research API
+| Path | Behavior |
+| --- | --- |
+| `TAVILY_API_KEY` set | Tavily search → optional OpenAI structure → `source: "tavily"` |
+| No key / failure | Fixtures by appointment type → `source: "fixture"` |
 
-Tools over the same appointment/doc model: `get_required_docs`, `check_document`, `compute_readiness`.
+**Code:** `src/lib/research/*`, `src/app/api/research-docs/route.ts`, `src/app/schedule/*`  
+**Env:** `TAVILY_API_KEY` in `.env.local` / `.env.example`
 
-## Phase 4 / 6
+## Phase 5 — Agentic readiness (done)
 
-Library UI polish; mode toggle; synthetic PDFs in repo.
+Fixed tool loop (not a free chat agent):
+
+1. Prep → **Run readiness check** → `POST /api/readiness` with `{ appointment_id, state }`
+2. Server: `get_required_docs` → N× `check_document` → `compute_readiness` → short summary (OpenAI or fixture)
+3. Client writes `readinessScore`; UI shows summary + expandable tool trace
+
+**Code:** `src/lib/agent/*`, `src/app/api/readiness/route.ts`, Prep page  
+**Score:** `round(100 * (uploaded + 0.5 * need_check) / required)`
+
+## Phase 6 — Polish
+
+Library UI, mode toggle, synthetic PDFs in repo.
 
 ---
 

@@ -48,6 +48,11 @@ export type RequiredDocItem = {
   doc_type?: TimelineEntry["type"];
 };
 
+export type ResearchCitation = {
+  title: string;
+  url: string;
+};
+
 export type Appointment = {
   id: string;
   date: string;
@@ -55,6 +60,33 @@ export type Appointment = {
   provider: { name: string; role: string };
   /** Checklist item ids required for this visit */
   required_doc_ids: string[];
+  location?: string;
+  appointment_type?: string;
+  notes?: string;
+  status: "upcoming" | "completed" | "cancelled";
+  /** checklist id → why (from Tavily / research) */
+  doc_reasons?: Record<string, string>;
+  research_citations?: ResearchCitation[];
+};
+
+export type ResearchDocItem = {
+  id: string;
+  label: string;
+  reason: string;
+};
+
+export type ResearchDocsRequest = {
+  appointment_type: string;
+  location?: string;
+  provider_role?: string;
+  gestational_week?: number;
+  notes?: string;
+};
+
+export type ResearchDocsResponse = {
+  source: "tavily" | "fixture";
+  required: ResearchDocItem[];
+  citations: ResearchCitation[];
 };
 
 export type AppState = {
@@ -91,4 +123,10 @@ export type ExtractRequest = {
   mimeType?: string;
   textHint?: string;
   imageBase64?: string;
+};
+
+/** Client → POST /api/readiness (localStorage snapshot). */
+export type ReadinessRequest = {
+  appointment_id: string;
+  state: AppState;
 };

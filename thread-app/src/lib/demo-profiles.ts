@@ -1,5 +1,11 @@
 import { appointmentFromProfile, defaultState, saveState } from "./store";
-import type { AppState, LibraryDoc, PatientProfile, TimelineEntry } from "./types";
+import type {
+  Appointment,
+  AppState,
+  LibraryDoc,
+  PatientProfile,
+  TimelineEntry,
+} from "./types";
 
 /** Demo persona packaged as a full AppState snapshot for localStorage. */
 export type DemoProfile = {
@@ -26,10 +32,18 @@ function entry(partial: TimelineEntry): TimelineEntry {
   return partial;
 }
 
-/** Attach a Zone 1 next-visit appointment and link checklist docs to it. */
-function withNextAppt(state: AppState, apptId: string): AppState {
+/** Attach a next-visit appointment (Zone 1 defaults + optional clinical overrides). */
+function withNextAppt(
+  state: AppState,
+  apptId: string,
+  overrides?: Partial<Omit<Appointment, "id">>,
+): AppState {
   if (!state.profile) return state;
-  const appt = appointmentFromProfile(state.profile, apptId);
+  const appt: Appointment = {
+    ...appointmentFromProfile(state.profile, apptId),
+    ...overrides,
+    id: apptId,
+  };
   return {
     ...state,
     appointments: [appt],
@@ -44,8 +58,13 @@ const aishaOnboarded: DemoProfile = {
   id: "aisha-onboarded",
   label: "Aisha — onboarded only",
   name: "Aisha Khan",
-  showcases: ["Onboarding form → store", "Empty timeline", "Prep checklist all Missing"],
-  blurb: "Week 8 patient with next appointment set; zero documents uploaded.",
+  showcases: [
+    "Onboarding form → store",
+    "Empty timeline",
+    "First prenatal visit · all docs Missing",
+  ],
+  blurb:
+    "Week 8 · first prenatal / OB intake with Dr. Maya Patel. No docs uploaded yet — Meeting Prep shows 0/4.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -56,13 +75,38 @@ const aishaOnboarded: DemoProfile = {
         provider: { name: "Dr. Maya Patel", role: "OB/GYN" },
         next_appointment: {
           date: "2026-03-18",
-          title: "First prenatal visit",
+          title: "First prenatal visit (OB intake)",
         },
         onboarding_source: "form",
       }),
       readinessScore: 0,
     },
     "appt_aisha",
+    {
+      appointment_type: "prenatal_checkup",
+      location: "Riverside Women's Health — Clinic A",
+      notes:
+        "New OB intake (~8 weeks): history, exam, baseline labs ordered, dating ultrasound discussed.",
+      doc_reasons: {
+        intake:
+          "New-patient maternal history, medications, and consent forms are completed at the first prenatal visit.",
+        labs: "Baseline prenatal labs (blood type, CBC, infectious disease screen) are ordered at or right after the first visit — bring any prior results.",
+        ultrasound:
+          "Dating ultrasound (often 8–12 weeks) confirms gestational age; bring any early pregnancy scan reports if already done elsewhere.",
+        insurance:
+          "Photo ID and insurance card are typically required at check-in for a new OB intake.",
+      },
+      research_citations: [
+        {
+          title: "Initial Antepartum Care (NCBI StatPearls)",
+          url: "https://www.ncbi.nlm.nih.gov/books/NBK570635/",
+        },
+        {
+          title: "Prenatal Appointment Timeline (Sinai Health)",
+          url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/prenatal-appointment-timeline",
+        },
+      ],
+    },
   ),
 };
 
@@ -77,11 +121,11 @@ const mayaCanonical: DemoProfile = {
   showcases: [
     "Canonical demo persona",
     "Unresolved field flags",
-    "Partial Meeting Prep checklist",
+    "12-week visit · partial prep",
     "Timeline + library with 2 docs",
   ],
   blurb:
-    "PLAN.md default: week 12, Dr. Sarah Chen. Intake need-check; labs uploaded; ultrasound & insurance missing.",
+    "Week 12 · prenatal checkup in the NT / first-trimester screening window. Intake needs check; labs uploaded; ultrasound & insurance missing.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -94,7 +138,7 @@ const mayaCanonical: DemoProfile = {
         provider: { name: "Dr. Sarah Chen", role: "OB/GYN" },
         next_appointment: {
           date: "2026-03-14",
-          title: "12-Week Prenatal Checkup",
+          title: "12-week prenatal checkup",
         },
         onboarding_source: "form",
       }),
@@ -181,6 +225,31 @@ const mayaCanonical: DemoProfile = {
       ],
     },
     "appt_maya",
+    {
+      appointment_type: "prenatal_checkup",
+      location: "Northside OB Clinic — Suite 210",
+      notes:
+        "Routine ~12-week follow-up in the 11–14 week first-trimester screening / NT window. Review labs; confirm dating US or NT referral.",
+      doc_reasons: {
+        intake:
+          "Updated intake/history so the provider can counsel on genetic screening options at this visit.",
+        labs: "First-trimester panel results (blood type, CBC, infectious screens) should be available for review.",
+        ultrasound:
+          "Dating or NT ultrasound report (11–14 weeks) confirms GA and supports aneuploidy screening discussion.",
+        insurance:
+          "Insurance card for check-in and coverage of screening ultrasound / lab add-ons.",
+      },
+      research_citations: [
+        {
+          title: "Prenatal Appointment Timeline (Sinai Health)",
+          url: "https://www.sinaihealth.ca/areas-of-care/wih/pregnancy-birth-and-newborn-care/prenatal-appointment-timeline",
+        },
+        {
+          title: "Early Prenatal Care Checklist (Perinatal Services BC)",
+          url: "https://www.perinatalservicesbc.ca/Documents/Resources/Checklists/PSBC_Prenatal_Checklist.pdf",
+        },
+      ],
+    },
   ),
 };
 
@@ -191,11 +260,12 @@ const priyaReady: DemoProfile = {
   name: "Priya Desai",
   showcases: [
     "Full Zone 1 checklist (Have ×4)",
+    "NT / dating ultrasound visit",
     "High readinessScore",
     "Document Library with multiple types",
   ],
   blurb:
-    "Intake, labs, ultrasound, and insurance all on file — Meeting Prep should show 4/4 uploaded.",
+    "Week 12 · NT / first-trimester dating ultrasound with Dr. Helen Cho. Intake, labs, dating US, and insurance all on file — Meeting Prep 4/4.",
   state: withNextAppt(
     {
       ...defaultState(),
@@ -208,7 +278,7 @@ const priyaReady: DemoProfile = {
         provider: { name: "Dr. Helen Cho", role: "OB/GYN" },
         next_appointment: {
           date: "2026-03-08",
-          title: "NT scan consult",
+          title: "NT / first-trimester ultrasound",
         },
         onboarding_source: "form",
       }),
@@ -339,6 +409,32 @@ const priyaReady: DemoProfile = {
       ],
     },
     "appt_priya",
+    {
+      appointment_type: "dating_ultrasound",
+      location: "Summit Imaging — Maternal-Fetal Unit",
+      notes:
+        "Nuchal translucency / first-trimester ultrasound (11–14 weeks). Prior dating report and labs on file for correlation.",
+      provider: { name: "Dr. Ana Park", role: "Maternal-Fetal Medicine" },
+      doc_reasons: {
+        intake:
+          "Completed intake confirms history and consent before genetic screening ultrasound.",
+        labs: "First-trimester serum results (or panel) pair with NT imaging for integrated screening when offered.",
+        ultrasound:
+          "Prior dating ultrasound report establishes GA so the NT window (11–13+6 weeks) is scheduled correctly.",
+        insurance:
+          "Insurance card required for imaging check-in and coverage verification.",
+      },
+      research_citations: [
+        {
+          title: "Early Prenatal Care Checklist (Perinatal Services BC)",
+          url: "https://www.perinatalservicesbc.ca/Documents/Resources/Checklists/PSBC_Prenatal_Checklist.pdf",
+        },
+        {
+          title: "Antenatal Screening Guidelines (RCP Nova Scotia)",
+          url: "https://rcp.nshealth.ca/sites/default/files/clinical-practice-guidelines/antenatal%20screening%20guidelines%2011X17%20Rev%20July%202024.pdf",
+        },
+      ],
+    },
   ),
 };
 

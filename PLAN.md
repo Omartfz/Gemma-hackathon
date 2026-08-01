@@ -25,16 +25,17 @@ Core wow: **Gemma 4** reads uploaded documents, flags incomplete/off fields, and
 
 | Person | Owns |
 | --- | --- |
-| **Daniel** | **Onboarding** (form) + **Home** (timeline, next appointment, Prep CTA, empty state). “Connect EHR” as disabled/roadmap choice only. |
-| **Omar** | **Upload Docs**, **Meeting Prep**, **Document Library**, Gemma dual client (local / API), synthetic doc pack, readiness/tool logic that feeds Home’s CTA |
+| **Daniel** | **Onboarding** (form) + **Home** (visual trimester timeline of uploaded docs, Prep CTA, empty state). “Connect EHR” as disabled/roadmap choice only. |
+| **Omar** | **Schedule** (list + book), **Upload Docs**, **Meeting Prep**, **Document Library**, extract client, **Tavily** doc research, readiness/agent tools |
 
 **Shared first (~30 min before diverging):** lock schemas + Zone 1 checklist + demo persona so both bind to the same store.
 
 **Handoff contract**
 
-- Daniel’s onboarding **writes** patient profile + next appointment into the shared store.
-- Omar’s Upload **writes** documents, timeline entries, flags.
-- Home and Meeting Prep **read** the shared store.
+- Daniel’s onboarding **writes** patient profile (+ next appointment); `ensureAppointments` can seed Schedule.
+- Omar’s Schedule/book **writes** `appointments` (with required docs from Tavily/fixtures).
+- Omar’s Upload **writes** documents, timeline entries, flags linked to appointments.
+- Home, Schedule, Prep, and Upload **read** the shared store.
 - Do not invent parallel data models.
 
 ---
@@ -75,19 +76,20 @@ Optional: pre-fill **Maya, week 12, Dr. Sarah Chen, next visit ~2 weeks out** fo
 
 | Integration | Demo reality |
 | --- | --- |
-| Gemma 4 | Core — local and/or API |
+| Gemma 4 | Core — local and/or API (OpenAI temp for extract if no Gemma key) |
 | OnTross / Athena | Not in demo — roadmap only |
-| Tavily | Optional later — skip unless time |
+| Tavily | Live for book-appointment doc research; **fixture fallback** if no `TAVILY_API_KEY` |
 
 ---
 
 ## Pages (MVP)
 
 0. **Onboarding** — form required; Connect EHR non-functional  
-1. **Home** — trimester-zone timeline, next appointment card, “Prep for Next Appointment”, empty state  
-2. **Upload Docs** — PDF/photo → Gemma extract → flag empty/off fields → inline user edit → save; can also seed/enrich timeline  
-3. **Meeting Prep** — required-docs checklist, gaps, drafted questions, readiness score  
-4. **Document Library** — list + detail (modal/expand, not a separate heavy route)
+1. **Home** (Daniel) — trimester-zone timeline of uploaded docs, Prep CTA, empty state  
+2. **Schedule** (Omar) — upcoming appointments + **Book appointment** (type/where/who/notes → Tavily research → required docs)  
+3. **Upload Docs** — pick appointment + document title → extract → save  
+4. **Meeting Prep** — per-appointment docs with missing / uploaded / need check  
+5. **Document Library** — list + detail (modal/expand)
 
 **Demo focus:** Zone 1 (First Trimester) only. Zones 2–4 may be visual scaffolding with little content.
 
@@ -104,11 +106,11 @@ Meeting Prep checklist is tied to current stage (Zone 1 for demo).
 
 ## Agent / tools (document readiness — not EHR fetch)
 
-Scaffold now; deepen if time:
+Fixed loop via `POST /api/readiness` (client passes AppState):
 
-- `get_required_docs(stage)` → static Zone 1 checklist JSON  
-- `check_document` → Gemma structured extract + flags  
-- `update_task_list` / `compute_readiness` → Meeting Prep + Home CTA  
+- `get_required_docs(appointment_id)` → appointment required docs + reasons  
+- `check_document` → status + open extract flags (no re-extract)  
+- `compute_readiness` → score → Meeting Prep + Home CTA  
 
 **Safety:** Flags = documentation completeness only. Never interpret symptoms or diagnose.
 
@@ -158,11 +160,11 @@ If the team prefers Vite instead, agree in chat and update this file before scaf
 
 ## Demo script (~2 min)
 
-1. Onboarding form (pre-filled Maya OK) — mention Connect EHR as future option  
-2. Show Cloud or Private Gemma mode  
-3. Upload good doc → timeline updates; upload incomplete → flags + inline fix  
-4. Meeting Prep → checklist, gap, questions, readiness score  
-5. Flip Gemma toggle — local vs API  
+1. Onboarding / demo profile (Maya OK)  
+2. **Schedule → Book appointment** → Research documents (Tavily or fixture) → Confirm  
+3. Meeting Prep → see new appointment’s required docs (missing / uploaded / need check)  
+4. Upload → pick that appointment + doc title → extract → save  
+5. Home timeline shows uploaded entries (Daniel)  
 6. Disclaimer: decision-support / synthetic only  
 
 ---
@@ -171,28 +173,28 @@ If the team prefers Vite instead, agree in chat and update this file before scaf
 
 - Ollama install + `gemma4:e2b` pull  
 - Real OnTross credentials / live EHR connect  
-- Tavily  
+- Swap OpenAI extract → Gemma cloud  
 - In-browser LiteRT / WebGPU  
-- Rich Zones 2–4  
-- Full agent loop polish  
+- Rich Zones 2–4 on Home  
+- Full multi-tool readiness agent polish  
 - Kaggle writeup final draft  
 
 ---
 
 ## Work checklist
 
-- [ ] Lock schemas + Zone 1 checklist + Maya persona (shared)  
-- [ ] Scaffold Next.js + shared store + routes  
+- [x] Lock schemas + Zone 1 checklist + Maya persona (shared)  
+- [x] Scaffold Next.js + shared store + routes  
 - [ ] Daniel: Onboarding form + Home  
-- [ ] Omar: Gemma dual client  
-- [ ] Omar: Upload Docs extract/flag/edit  
-- [ ] Omar: Meeting Prep + readiness  
-- [ ] Omar: Document Library  
-- [ ] Omar: Synthetic pack + expected outputs  
+- [x] Omar: Extract API (OpenAI temp / fixtures)  
+- [x] Omar: Prep by appointment + targeted Upload  
+- [x] Omar: Schedule + book + Tavily research  
+- [x] Omar: Agentic readiness loop  
+- [ ] Omar: Document Library polish  
 - [ ] Mode toggle, disclaimers, sync README with this plan  
 
 ---
 
 ## README drift
 
-Older README wording may still say “100% offline” or EHR-first flows. **This file wins** until README is updated to: onboarding form (EHR later) + hybrid Gemma local/API + document readiness.
+Older README wording may still say “100% offline” or EHR-first flows. **This file wins** until README is updated to: onboarding form (EHR later) + Schedule/book + hybrid Gemma local/API + Tavily doc research + document readiness.

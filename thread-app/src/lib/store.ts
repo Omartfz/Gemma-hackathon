@@ -16,6 +16,16 @@ function canUseStorage(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
+function normalizeAppointment(raw: Appointment): Appointment {
+  return {
+    ...raw,
+    status: raw.status ?? "upcoming",
+    required_doc_ids: Array.isArray(raw.required_doc_ids)
+      ? raw.required_doc_ids
+      : ZONE1_REQUIRED_DOCS.map((d) => d.id),
+  };
+}
+
 /** Build a Zone 1 appointment from the profile's next visit. */
 export function appointmentFromProfile(
   profile: NonNullable<AppState["profile"]>,
@@ -27,6 +37,11 @@ export function appointmentFromProfile(
     title: profile.next_appointment.title,
     provider: profile.provider,
     required_doc_ids: ZONE1_REQUIRED_DOCS.map((d) => d.id),
+    appointment_type: "prenatal_checkup",
+    status: "upcoming",
+    doc_reasons: Object.fromEntries(
+      ZONE1_REQUIRED_DOCS.map((d) => [d.id, d.description]),
+    ),
   };
 }
 
@@ -57,7 +72,7 @@ export function loadState(): AppState {
       ...base,
       ...parsed,
       appointments: Array.isArray(parsed.appointments)
-        ? parsed.appointments
+        ? parsed.appointments.map((a) => normalizeAppointment(a as Appointment))
         : base.appointments,
       entries: Array.isArray(parsed.entries) ? parsed.entries : base.entries,
       documents: Array.isArray(parsed.documents) ? parsed.documents : base.documents,

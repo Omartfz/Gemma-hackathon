@@ -19,14 +19,23 @@ export type AppointmentPrepView = {
   docs: AppointmentDocStatus[];
 };
 
-function catalogItem(id: string): RequiredDocItem {
-  return (
-    ZONE1_REQUIRED_DOCS.find((d) => d.id === id) ?? {
-      id,
-      label: id,
-      description: "Required for this visit.",
-    }
-  );
+function catalogItem(
+  id: string,
+  appointment?: Appointment,
+): RequiredDocItem {
+  const base = ZONE1_REQUIRED_DOCS.find((d) => d.id === id);
+  const reason = appointment?.doc_reasons?.[id];
+  if (base) {
+    return {
+      ...base,
+      description: reason ?? base.description,
+    };
+  }
+  return {
+    id,
+    label: id.replace(/_/g, " "),
+    description: reason ?? "Required for this visit.",
+  };
 }
 
 export function findLinkedDoc(
@@ -61,7 +70,7 @@ export function getAppointmentPrepViews(state: AppState): AppointmentPrepView[] 
   return appointments.map((appointment) => ({
     appointment,
     docs: appointment.required_doc_ids.map((id) => {
-      const item = catalogItem(id);
+      const item = catalogItem(id, appointment);
       const matchingDoc = findLinkedDoc(
         appointment.id,
         id,
