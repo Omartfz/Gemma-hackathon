@@ -1,5 +1,7 @@
 # Pregnancy Continuity-of-Care App
 
+> **Team agreement:** see [PLAN.md](PLAN.md) for the locked hackathon plan (team split, hybrid Gemma, onboarding form, no EHR in demo). When this README and PLAN disagree, **PLAN.md wins** until README is updated.
+
 ## Problem
 Pregnant patients see multiple providers over 9+ months — OB, midwife, specialists, labs.
 Info gets lost between visits. Patients forget symptoms, don't know what's normal, walk into
